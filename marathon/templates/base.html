@@ -40,15 +40,15 @@
       <div id="top">
         <div class="container">
           <div class="row">
-            <div class="col-lg-6 offer mb-3 mb-lg-0"><a href="#" class="btn btn-success btn-sm">Offer of the day</a><a href="#" class="ml-1">Get flat 30% off on orders over $500!</a></div>
+            <div class="col-lg-6 offer mb-3 mb-lg-0"><a href="#" class="btn btn-success btn-sm">Offer of the day</a></div>
             <div class="col-lg-6 text-center text-lg-right">
               <ul class="menu list-inline mb-0">
-                {% if not loggedIn %}
+                {% if session['email'] is defined %}
+                <li class="list-inline-item"><a href="#" data-toggle="modal">{{firstName}}</a></li>
+                <li class="list-inline-item"><a href="{{url_for('logout')}}">Logout</a></li>                
+                {% else %}
                 <li class="list-inline-item"><a href="#" data-toggle="modal" data-target="#login-modal">Login</a></li>
                 <li class="list-inline-item"><a href="{{url_for('registrationForm')}}">Register</a></li>
-                {% else %}
-                <li class="list-inline-item"><a href="#" data-toggle="modal">{{firstName}}</a></li>
-                <li class="list-inline-item"><a href="{{url_for('logout')}}">Logout</a></li>
                 {% endif %}
                 <li class="list-inline-item"><a href="{{url_for('contact')}}">Contact</a></li>
               </ul>
@@ -97,9 +97,11 @@
               <li class="nav-item"><a href="/displayGender?genderId=1" class="nav-link">Men</a></li>
               <li class="nav-item"><a href="/displayGender?genderId=2" class="nav-link">Ladies</a></li>
               <li class="nav-item"><a href="/displayGender?genderId=3" class="nav-link">Children</a></li>
+              {% if session['email'] is defined and not isAdmin %}
+              <li class="nav-item"><a href="{{ url_for('getUserOrders') }}" class="nav-link">History</a></li>
+              {% endif %}
 
               {% if isAdmin %}
-
               <li class="nav-item dropdown menu-large"><a href="#" data-toggle="dropdown" data-hover="dropdown" data-delay="200" class="dropdown-toggle nav-link">Admin<b class="caret"></b></a>
                 <ul class="dropdown-menu megamenu">
                   <li>
@@ -110,6 +112,8 @@
                           <li class="nav-item"><a href="{{ url_for('getProducts') }}" class="nav-link">Products</a></li>
                           <li class="nav-item"><a href="{{ url_for('getCategories') }}" class="nav-link">Categories</a></li>
                           <li class="nav-item"><a href="{{ url_for('getUsers') }}" class="nav-link">Users</a></li>
+                          <li class="nav-item"><a href="{{ url_for('getOrders') }}" class="nav-link">Orders</a></li>
+                          <li class="nav-item"><a href="{{ url_for('seeTrends') }}" class="nav-link">Trends</a></li>
                         </ul>
                       </div>
                       

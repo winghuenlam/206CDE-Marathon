@@ -49,7 +49,7 @@ def register():
     if request.method == 'POST':
         # Parse form data
         msg = extractAndPersistUserDataFromForm(request)
-        return render_template("login.html", error=msg)
+        return render_template("index.html", error=msg)
 
 
 @app.route("/")
@@ -114,19 +114,6 @@ def displayGender():
     return render_template('gender_products.html', products=products, genderName=genderName, gender=gender, isAdmin=isAdmin)
 
 
-
-'''
-@app.route("/productDescription")
-def productDescription():
-    loggedIn, firstName, noOfItems = getLoginUserDetails()
-    productid = 1
-    #productid = request.args.get('productId')
-    productDetailsByProductId = getProductDetails(productid)
-    return render_template("productDescription.html", data=productDetailsByProductId, loggedIn=loggedIn,
-                           firstName=firstName,
-                           noOfItems=noOfItems)
-'''
-
 @app.route("/addToCart")
 def addToCart():
     if isUserLoggedIn():
@@ -154,6 +141,23 @@ def cart():
                                firstName=firstName, totalsum=totalsum, userid=userid, isAdmin=isAdmin)
     else:
         return redirect(url_for('index'))
+
+
+@app.route("/user/orders")
+def getUserOrders():
+    if isUserLoggedIn():
+        loggedIn, firstName, productCountinKartForGivenUser, userid = getLoginUserDetails()
+
+        orderDetails = db.session.query(Order, OrderedProduct, Product) \
+        .join(OrderedProduct, Order.orderid==OrderedProduct.orderid) \
+        .join(Product, Product.productid==OrderedProduct.productid) \
+        .filter(Order.userid == userid) \
+        .all()
+
+        #products = Product.query.all()
+        return render_template('userOrders.html', orderDetails=orderDetails)
+    return redirect(url_for('index'))
+
 
 @app.route("/admin/category/<int:category_id>", methods=['GET'])
 def category(category_id):
@@ -263,7 +267,7 @@ def addProduct():
                 product_icon1 = save_picture(form.image1.data)
             if form.image2.data:
                 product_icon2 = save_picture(form.image2.data)
-            product = Product(product_name=form.productName.data, description=form.productDescription.data, image=product_icon1, image2=product_icon2, quantity=form.productQuantity.data, discounted_price=form.productPrice.data, product_rating=0, product_review=" ", regular_price=form.productPrice.data)
+            product = Product(product_name=form.productName.data, description=form.productDescription.data, image=product_icon1, image2=product_icon2, quantity=form.productQuantity.data, discounted_price=form.discountedPrice.data, product_rating=0, product_review=" ", regular_price=form.productPrice.data)
 
             db.session.add(product)
             db.session.commit()
@@ -322,6 +326,7 @@ def update_product(product_id):
             product.quantity = form.productQuantity.data
             # product.discounted_price = form.data.discounted_price = 15
             product.regular_price = form.productPrice.data
+            product.discounted_price = form.discountedPrice.data
             db.session.commit()
             product_category = ProductCategory.query.filter_by(productid = product.productid).first()
             if form.category.data != product_category.categoryid:
@@ -365,7 +370,7 @@ def delete_product(product_id):
     return redirect(url_for('getProducts'))
 
 
-@app.route("/admin/users", methods=['GET'])
+@app.route("/admin/users")
 def getUsers():
     if isUserAdmin():
         isAdmin = True
@@ -374,6 +379,21 @@ def getUsers():
         cur.execute("SELECT u.fname, u.lname, u.email, u.phone, COUNT(o.orderid) as noOfOrders FROM `user` u LEFT JOIN `order` o ON u.userid = o.userid WHERE u.usertype = 'customer' GROUP BY u.userid")
         users = cur.fetchall()
         return render_template('adminUsers.html', users= users, isAdmin=isAdmin)
+    return redirect(url_for('index'))
+
+
+@app.route("/admin/orders")
+def getOrders():
+    if isUserAdmin():
+        isAdmin = True
+
+        orderDetails = db.session.query(Order, OrderedProduct, Product) \
+        .join(OrderedProduct, Order.orderid==OrderedProduct.orderid) \
+        .join(Product, Product.productid==OrderedProduct.productid) \
+        .all()
+
+        #products = Product.query.all()
+        return render_template('adminOrders.html', orderDetails=orderDetails, isAdmin=isAdmin)
     return redirect(url_for('index'))
 
 
@@ -416,31 +436,34 @@ def createOrder():
 
 @app.route("/seeTrends", methods=['GET', 'POST'])
 def seeTrends():
-    trendtype = str(request.args.get('trend'))
-    cur = mysql.connection.cursor()
-    if(trendtype=="least"):
-        cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
-                       ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
-                           ORDER BY TotalQuantity ASC LIMIT 3 ")
-    else:
-        trendtype="most"
-        cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
-                ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
-                    ORDER BY TotalQuantity DESC LIMIT 3 ")
+    if isUserAdmin():
+        isAdmin = True
+        trendtype = str(request.args.get('trend'))
+        cur = mysql.connection.cursor()
+        if(trendtype=="least"):
+            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
+                           ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
+                               ORDER BY TotalQuantity ASC ")
+        else:
+            trendtype="most"
+            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
+                    ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
+                        ORDER BY TotalQuantity DESC ")
 
-    products = cur.fetchall()
-    cur.close()
-    x = []
-    y = []
-    for item in products:
-        x.append(item['product_name'])
-        y.append(item['TotalQuantity'])
+        products = cur.fetchall()
+        cur.close()
+        x = []
+        y = []
+        for item in products:
+            x.append(item['product_name'])
+            y.append(item['TotalQuantity'])
 
-    my_plot_div = plot([go.Bar(x=x, y=y)], output_type='div')
+        my_plot_div = plot([go.Bar(x=x, y=y)], output_type='div')
 
-    return render_template('trends.html',
-                           div_placeholder=Markup(my_plot_div),trendtype=trendtype
-                           )
+        return render_template('trends.html',
+                               div_placeholder=Markup(my_plot_div),trendtype=trendtype, isAdmin=isAdmin
+                               )
+    return redirect(url_for('index'))
 
 @app.route("/contact")
 def contact():

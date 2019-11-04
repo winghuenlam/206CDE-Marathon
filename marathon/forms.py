@@ -175,6 +175,7 @@ class addProductForm(FlaskForm):
     productName = StringField('Product Name:', validators=[DataRequired()])
     productDescription = TextAreaField('Product Description:', validators=[DataRequired()])
     productPrice = FloatField('Product Price:', validators=[DataRequired()])
+    discountedPrice = FloatField('Discounted Price:', validators=[DataRequired()])
     productQuantity = IntegerField('Product Quantity:', validators=[DataRequired()])
     image1 = FileField('Product Image 1', validators=[FileAllowed(['jpg', 'png'])])
     image2 = FileField('Product Image 2', validators=[FileAllowed(['jpg', 'png'])])
@@ -195,7 +196,6 @@ def getusercartdetails():
     for row in productsincart:
         totalsum += row[7]
 
-    totalsum = float("%.2f" % (1.06 * float(totalsum)))
     return (productsincart, totalsum)
 
 
