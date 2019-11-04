@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+    <div id="all">
+      <div id="content">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-12">
+              <!-- breadcrumb-->
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><a href="#">Home</a></li>
+                  <li aria-current="page" class="breadcrumb-item active">Checkout - Order review</li>
+                </ol>
+              </nav>
+            </div>
+            <div id="checkout" class="col-lg">
+              <div class="box">
+                <form method="get" action="checkout4.html">
+                  <h1>Order Sucessful</h1>
+                  
+                  <div class="content">
+                    <div class="table-responsive">
+                      Order number :{{ordernumber|join('')}}
+                    </div>
+                    <!-- /.table-responsive-->
+                  </div>
+                  <!-- /.content-->
+                  <div class="box-footer d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Place an order<i class="fa fa-chevron-right"></i></button>
+                  </div>
+                </form>
+              </div>
+              <!-- /.box-->
+            </div>
+            <!-- /.col-lg-9-->
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% endblock %}
+    

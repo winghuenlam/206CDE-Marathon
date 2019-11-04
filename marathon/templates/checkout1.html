@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+    <div id="all">
+      <div id="content">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-12">
+              <!-- breadcrumb-->
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><a href="#">Home</a></li>
+                  <li aria-current="page" class="breadcrumb-item active">Checkout</li>
+                </ol>
+              </nav>
+            </div>
+            <div id="checkout" class="col-lg-9">
+              <div class="box">
+                <form method="POST" action="/createOrder?total={{totalsum}}">
+                  <h1>Checkout</h1>
+                  
+                  <div class="content py-3">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="firstname">Firstname</label>
+                          <input id="firstname" name="firstname" type="text" class="form-control" value="{{userdetails.fname}}">
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="lastname">Lastname</label>
+                          <input id="lastname" name="lastname" type="text" class="form-control" value="{{userdetails.lname}}">
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.row-->
+                    <div class="row">
+                      <div class="col-md">
+                        <div class="form-group">
+                          <label for="company">Address</label>
+                          <input id="address" name="address" type="text" class="form-control" value="{{userdetails.address}}">
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.row-->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="phone">Telephone</label>
+                          <input id="phone" name="phone" type="text" class="form-control" value="{{userdetails.phone}}">
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="email">Email</label>
+                          <input id="email" name="email" type="text" class="form-control" value="{{userdetails.email}}">
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.row-->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label>Payment Methods</label>
+                          <div class="icon-container">
+                            <input type="radio" name="cardtype" value="visa" required>
+                          <i class="fa fa-cc-visa" style="color:navy;"></i>
+                            <input type="radio" name="cardtype" value="amex" required>
+                          <i class="fa fa-cc-amex" style="color:blue;"></i>
+                            <input type="radio" name="cardtype" value="mastercard" required>
+                          <i class="fa fa-cc-mastercard" style="color:red;"></i>
+                            <input type="radio" name="cardtype" value="discover" required>
+                          <i class="fa fa-cc-discover" style="color:orange;"></i>
+                        </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label>Card Number</label>
+                          <input id="cardnum" name="cardnum" type="text" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.row-->
+
+
+                  </div>
+                  <div class="box-footer d-flex justify-content-between"><a href="basket.html" class="btn btn-outline-secondary"><i class="fa fa-chevron-left"></i>Back to Basket</a>
+                    <button type="submit" class="btn btn-primary">Confirm Checkout<i class="fa fa-chevron-right"></i></button>
+                  </div>
+                </form>
+              </div>
+              <!-- /.box-->
+            </div>
+            <!-- /.col-lg-9-->
+            <div class="col-lg-3">
+              <div id="order-summary" class="card">
+                <div class="card-header">
+                  <h3 class="mt-4 mb-4">Order summary</h3>
+                </div>
+                <div class="card-body">
+                  <p class="text-muted">Shipping and additional costs are calculated based on the values you have entered.</p>
+                  <div class="table-responsive">
+                    <table class="table">
+                      <tbody>
+                        <tr>
+                          <td>Order subtotal</td>
+                          <th>${{totalsum}}</th>
+                        </tr>
+                        <tr>
+                          <td>Shipping and handling</td>
+                          <th>$0.00</th>
+                        </tr>
+                        <tr>
+                          <td>Tax</td>
+                          <th>$0.00</th>
+                        </tr>
+                        <tr class="total">
+                          <td>Total</td>
+                          <th>${{totalsum}}</th>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.col-lg-3-->
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endblock %}
