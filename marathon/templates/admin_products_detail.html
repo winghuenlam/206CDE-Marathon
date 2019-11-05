@@ -141,7 +141,6 @@
                     <p class="goToDescription"><a href="#details" class="scroll-to">Scroll to product details, material &amp; care and sizing</a></p>
                     <p class="price">$ {{product.regular_price}}</p>
                     <p> Stock: {{product.quantity}}</p>
-                    <p class="text-center buttons"><a class="btn btn-primary" href="/addToCart?productId={{product.productid}}"><i class="fa fa-shopping-cart"></i> Add to cart</a></p>
 
                     <div>
                     <a class="btn btn-primary btn-sm mt-1 mb-1" href="{{ url_for('update_product', product_id=product.productid) }}">Update</a>

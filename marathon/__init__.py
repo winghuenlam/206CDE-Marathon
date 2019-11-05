@@ -1,3 +1,5 @@
+'''
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -43,3 +45,38 @@ from marathon import models
 from marathon import routes
 
 models.db.create_all()
+'''
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_required
+
+app = Flask(__name__)
+app.config.from_object('marathon.config')
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+db = SQLAlchemy(app)
+db_connection = db.engine.connect()
+
+
+######### Required in Case of firing complex queries without ORM #########
+import cx_Oracle
+conn = cx_Oracle.connect('G1_team02/ceG1_team02@144.214.177.102/xe')
+cur = conn.cursor()
+######### Required in Case of firing complex queries without ORM #########
+
+'''
+cur.execute('SELECT * FROM "user"')
+
+for row in cur.fetchall():
+	print("email[{0}], pw[{1}]".format(row[0], row[1]))
+'''
+
+from marathon import models
+from marathon import routes
+
+
+
+

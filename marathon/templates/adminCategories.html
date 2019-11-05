@@ -15,9 +15,9 @@
             <tbody>
               {% for category in categories %}
                 <tr>
-                  <td>{{ category.category_name}}</td>
-                  <td>{{ category.noOfProducts }}</td>
-                  <td><a href="{{ url_for('category', category_id=category.categoryid) }}" class="btn btn-primary btn-sm m-1">View</a></td>
+                  <td>{{ category[1]}}</td>
+                  <td>{{ category[2] }}</td>
+                  <td><a href="{{url_for('category', category_id=category[0])}}" class="btn btn-primary btn-sm m-1">View</a></td>
                 </tr>
               {% endfor %}
             </tbody>

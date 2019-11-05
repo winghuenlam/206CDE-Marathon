@@ -10,8 +10,9 @@ from wtforms import StringField, SubmitField, TextAreaField, IntegerField, Radio
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import DataRequired, Length, Email
 
-from marathon import mysql
+#from marathon import mysql
 from marathon.models import *
+from marathon import cur
 
 
 def getAllProducts():
@@ -49,16 +50,16 @@ def massageItemData(data):
 
 def is_valid(email, password):
     # Using Flask-SQLAlchmy ORM
-    # data = User.query.with_entities(User.email, User.password).all()
+    userData = User.query.with_entities(User.email, User.password).all()
 
     # Using Raw SQL Select Query
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT email, password FROM user")
-    userData = cur.fetchall()
-    cur.close()
+    #cur = mysql.connection.cursor()
+    #cur.execute('SELECT email, password FROM "user"')
+    #userData = cur.fetchall()
+    #cur.close()
 
     for row in userData:
-        if row['email'] == email and row['password'] == password:
+        if row.email == email and row.password == password:
             return True
     return False
 
@@ -190,7 +191,7 @@ def getusercartdetails():
     productsincart = Product.query.join(Cart, Product.productid == Cart.productid) \
         .add_columns(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price, Cart.quantity, Product.image) \
         .add_columns(Product.discounted_price * Cart.quantity).filter(
-        Cart.userid == userId)
+        Cart.userid == userId[0])
     totalsum = 0
 
     for row in productsincart:
@@ -256,7 +257,7 @@ def extractOrderdetails(request, totalsum):
     orderdate = datetime.utcnow()
     userId = User.query.with_entities(User.userid).filter(User.email == session['email']).first()
     userId = userId[0]
-    order = Order(order_date=orderdate, total_price=totalsum, userid=userId)
+    order = Order(order_date=orderdate, total_price=int(totalsum), userid=userId)
     db.session.add(order)
     db.session.flush()
     db.session.commit()
