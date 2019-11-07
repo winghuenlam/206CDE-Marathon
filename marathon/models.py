@@ -120,7 +120,9 @@ class SaleTransaction(db.Model):
     amount = db.Column(db.DECIMAL, nullable=False)
     cc_number=db.Column(db.String(50), nullable=False)
     cc_type = db.Column(db.String(50), nullable=False)
-    response = db.Column(db.String(50), nullable=False)
+    full_name = db.Column(db.String(50))
+    address = db.Column(db.String(100))
+    response = db.Column(db.String(50))
 
 
     def __repr__(self):

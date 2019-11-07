@@ -15,6 +15,7 @@ from marathon.models import *
 from marathon import cur
 
 
+
 def getAllProducts():
     itemData = Product.query.join(ProductCategory, Product.productid == ProductCategory.productid) \
         .add_columns(Product.productid, Product.product_name, Product.discounted_price, Product.description,
@@ -223,24 +224,12 @@ class checkoutForm(FlaskForm):
                         validators=[DataRequired(), Email()])
     address = TextAreaField('address',
                             validators=[DataRequired()])
-    city = StringField('city',
-                       validators=[DataRequired(), Length(min=2, max=20)])
-    state = StringField('state',
-                        validators=[DataRequired(), Length(min=2, max=20)])
-    zip = StringField('zip',
-                      validators=[DataRequired(), Length(min=2, max=6)])
     cctype = RadioField('cardtype')
     cardname = StringField('cardnumber',
                            validators=[DataRequired(), Length(min=12, max=12)])
     ccnumber = StringField('Credit card number',
                            validators=[DataRequired()])
 
-    expmonth = StringField('Exp Month',
-                           validators=[DataRequired(), Length(min=12, max=12)])
-    expyear = StringField('Expiry Year',
-                          validators=[DataRequired(), Length(min=4, max=4)])
-    cvv = StringField('CVV',
-                      validators=[DataRequired(), Length(min=3, max=4)])
     submit = SubmitField('MAKE PAYMENT')
 
 
@@ -248,48 +237,59 @@ class checkoutForm(FlaskForm):
 
 def extractOrderdetails(request, totalsum):
     #fullname = request.form['FullName']
-    fullname = request.form['firstname'] + " " + request.form['lastname']
+    # fullname = request.form['firstname'] + " " + request.form['lastname']
+    full_name = request.form['fullname']
     email = request.form['email']
     address = request.form['address']
     phone = request.form['phone']
     cctype = request.form['cardtype']
     ccnumber = request.form['cardnum']
     orderdate = datetime.utcnow()
-    userId = User.query.with_entities(User.userid).filter(User.email == session['email']).first()
-    userId = userId[0]
-    order = Order(order_date=orderdate, total_price=int(totalsum), userid=userId)
+    userId = User.query.with_entities(User.userid,User.username).filter(User.email == session['email']).first()
+    # userId = userId[0]
+    order = Order(order_date=orderdate, total_price=int(totalsum), userid=userId[0])
     db.session.add(order)
     db.session.flush()
     db.session.commit()
 
-    orderid = Order.query.with_entities(Order.orderid).filter(Order.userid == userId).order_by(
+    orderid = Order.query.with_entities(Order.orderid).filter(Order.userid == userId[0]).order_by(
         Order.orderid.desc()).first()
-
+    # orderid = order[0]
     # add details to ordered;
     #  products table
-    addOrderedproducts(userId, orderid)
+    addOrderedproducts(userId[0], orderid[0])
     # add transaction details to the table
-    updateSalestransaction(totalsum, ccnumber, orderid, cctype)
+    updateSalestransaction(int(totalsum), ccnumber, orderid[0], cctype, full_name, address)
 
     # remove ordered products from cart after transaction is successful
-    removeordprodfromcart(userId)
+    removeordprodfromcart(userId[0])
     # sendtextconfirmation(phone,fullname,orderid)
-    return (email, fullname, orderid, address, fullname, phone)
+    return (email, userId[1], orderid, address, full_name, phone)
 
 
 # adds data to orderdproduct table
 
 def addOrderedproducts(userId, orderid):
+    #with session.no_autoflush:
     cart = Cart.query.with_entities(Cart.productid, Cart.quantity).filter(Cart.userid == userId)
+    
 
     for item in cart:
+        
         orderedproduct = OrderedProduct(orderid=orderid, productid=item.productid, quantity=item.quantity)
+        
         db.session.add(orderedproduct)
+
+        '''
+        sql = "insert into ordered_product(orderid, productid, quantity) values({0},{1},{2})".format(orderid,item.productid,item.quantity)
+        cur.execute(sql)
+        db.commit()
+        '''
 
         product_qty = Product.query.filter_by(productid=item.productid).first()
         product_qty.quantity = product_qty.quantity - item.quantity
-
-        db.session.flush()
+        
+        db.session.flush()   
         db.session.commit()
 
 
@@ -303,9 +303,9 @@ def removeordprodfromcart(userId):
 
 # adds sales transaction
 
-def updateSalestransaction(totalsum, ccnumber, orderid, cctype):
+def updateSalestransaction(totalsum, ccnumber, orderid, cctype, full_name, address):
     salesTransaction = SaleTransaction(orderid=orderid, transaction_date=datetime.utcnow(), amount=totalsum,
-                                       cc_number=ccnumber, cc_type=cctype, response="success")
+                                       cc_number=ccnumber, cc_type=cctype, full_name=full_name, address=address, response="success")
     db.session.add(salesTransaction)
     db.session.flush()
     db.session.commit()
@@ -386,3 +386,5 @@ def sendEmailconfirmation(email, username, ordernumber, phonenumber):
 
 
 # END CART MODULE
+
+

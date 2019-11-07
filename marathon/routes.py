@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 from flask import Markup
 from marathon.models import *
 from sqlalchemy.sql import func
+from marathon import cur
 
 
 @app.route("/signIn")
@@ -105,14 +106,16 @@ def displayGender():
                      Product.image, Product.image2) \
         .join(Gender, Gender.genderid == ProductGender.genderid) \
         .filter(Gender.genderid == int(genderId)) \
-        .add_columns(Gender.gender_name) \
         .all()
 
-    genderName = productDetailsByGenderId[0].gender_name
+    genderName = Gender.query.with_entities(Gender.gender_name).filter(Gender.genderid == int(genderId)).first()
+
+
+    #genderName = productDetailsByGenderId[0].gender_name
     products = massageItemData(productDetailsByGenderId)
     gender = [(row.gender_name) for row in Gender.query.all()]
     #products = Product.query.all()
-    return render_template('gender_products.html', products=products, genderName=genderName, gender=gender, isAdmin=isAdmin)
+    return render_template('gender_products.html', products=products, genderName=genderName[0], gender=gender, isAdmin=isAdmin)
 
 
 @app.route("/addToCart")
@@ -218,8 +221,15 @@ def getCategories():
         #categories = Category.query.all()
         #cur = mysql.connection.cursor()
         #Query for number of products on a category:
-        cur.execute('SELECT category.categoryid, category.category_name, COUNT(product_category.productid) as noOfProducts FROM category LEFT JOIN product_category ON category.categoryid = product_category.categoryid GROUP BY category.categoryid, category.category_name');
-        categories = cur.fetchall()
+        #cur.execute('SELECT category.categoryid, category.category_name, COUNT(product_category.productid) as noOfProducts FROM category LEFT JOIN product_category ON category.categoryid = product_category.categoryid GROUP BY category.categoryid, category.category_name');
+        #categories = cur.fetchall()
+        #cur.close()
+
+        categories = Category.query.with_entities(Category.categoryid, Category.category_name) \
+        .outerjoin(ProductCategory, ProductCategory.categoryid == Category.categoryid) \
+        .add_columns(func.count(ProductCategory.productid).label('noOfProducts')).group_by(Category.categoryid, Category.category_name).all()
+
+
         return render_template('adminCategories.html', categories = categories, isAdmin=isAdmin)
     return redirect(url_for('index'))
 
@@ -377,8 +387,15 @@ def getUsers():
         isAdmin = True
         # users = User.query.all()
         #cur = mysql.connection.cursor()
-        cur.execute("SELECT u.fname, u.lname, u.email, u.phone, COUNT(o.orderid) as noOfOrders FROM `user` u LEFT JOIN `order` o ON u.userid = o.userid WHERE u.usertype = 'customer' GROUP BY u.userid")
-        users = cur.fetchall()
+
+        #cur.execute("SELECT u.fname, u.lname, u.email, u.phone, COUNT(o.orderid) as noOfOrders FROM `user` u LEFT JOIN `order` o ON u.userid = o.userid WHERE u.usertype = 'customer' GROUP BY u.userid")
+        #users = cur.fetchall()
+        #cur.close()
+
+        users = User.query.with_entities(User.userid, User.fname, User.lname, User.email, User.phone).filter(User.usertype == 'customer') \
+        .outerjoin(Order, Order.userid == User.userid) \
+        .add_columns(func.count(Order.orderid).label('noOfOrders')).group_by(User.userid, User.fname, User.lname, User.email, User.phone).all()
+
         return render_template('adminUsers.html', users= users, isAdmin=isAdmin)
     return redirect(url_for('index'))
 
@@ -427,12 +444,12 @@ def checkoutForm():
 def createOrder():
     isAdmin = isUserAdmin()
     totalsum = request.args.get('total')
-    email, username, ordernumber, address, fullname, phonenumber = extractOrderdetails(request, totalsum)
+    email, username, ordernumber, address, full_name, phonenumber = extractOrderdetails(request, totalsum)
     #if email:
      #   sendEmailconfirmation(email, username, ordernumber, phonenumber)
 
     return render_template("checkout2.html", email=email, username=username, ordernumber=ordernumber,
-                                   address=address, fullname=fullname, phonenumber=phonenumber, isAdmin=isAdmin)
+                                   address=address, fullname=full_name, phonenumber=phonenumber, isAdmin=isAdmin)
 
 
 @app.route("/seeTrends", methods=['GET', 'POST'])
@@ -441,34 +458,28 @@ def seeTrends():
         isAdmin = True
         trendtype = str(request.args.get('trend'))
         #cur = mysql.connection.cursor()
-        '''
+        
         if(trendtype=="least"):
-            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
-                           ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
-                               ORDER BY TotalQuantity ASC ")
+            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name \
+                            FROM  ordered_product INNER JOIN product ON ordered_product.productid=product.productid  \
+                            GROUP BY ordered_product.productid, ordered_product.quantity,product.product_name \
+                             ORDER BY TotalQuantity ASC ")
         else:
             trendtype="most"
-            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name FROM \
-                    ordered_product,product where ordered_product.productid=product.productid GROUP BY productid \
-                        ORDER BY TotalQuantity DESC ")
-        '''
+            cur.execute("SELECT ordered_product.productid, sum(ordered_product.quantity) AS TotalQuantity,product.product_name \
+                            FROM  ordered_product INNER JOIN product ON ordered_product.productid=product.productid  \
+                            GROUP BY ordered_product.productid, ordered_product.quantity,product.product_name \
+                             ORDER BY TotalQuantity DESC ")
 
-        products2 = db.session.query(OrderedProduct, Product) \
-        .with_entities(func.sum(OrderedProduct.quantity).label('TotalQuantity')) \
-        .join(Product, Product.productid==OrderedProduct.productid) \
-        .add_column(Product.productid) \
-        .add_column(Product.product_name) \
-        .order_by(func.sum(OrderedProduct.quantity).amount.desc()) \
-        .all()
-
-
-        #products = cur.fetchall()
-        #cur.close()
+        products = cur.fetchall()
+        cur.close()
         x = []
         y = []
-        for item in products2:
-            #x.append(item['product_name'])
-            y.append(item['TotalQuantity'])
+
+        for item in products:
+            x.append(item[2])
+
+            y.append(item[1])
 
         my_plot_div = plot([go.Bar(x=x, y=y)], output_type='div')
 
