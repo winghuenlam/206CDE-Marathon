@@ -178,10 +178,15 @@ class addProductForm(FlaskForm):
     productDescription = TextAreaField('Product Description:', validators=[DataRequired()])
     productPrice = FloatField('Product Price:', validators=[DataRequired()])
     discountedPrice = FloatField('Discounted Price:', validators=[DataRequired()])
-    productQuantity = IntegerField('Product Quantity:', validators=[DataRequired()])
+    productQuantity = IntegerField('Product Quantity:(del soon)', validators=[DataRequired()])
+    sizeAvailable = StringField('Size available:', validators=[DataRequired()])
     image1 = FileField('Product Image 1', validators=[FileAllowed(['jpg', 'png'])])
     image2 = FileField('Product Image 2', validators=[FileAllowed(['jpg', 'png'])])
     submit = SubmitField('Save')
+
+def getProductSizes(productid):
+    sizes = Size.query.with_entities(Size.sizeid, Size.size_name, Size.productid).filter(Size.productid == int(productid)).all()
+    return(sizes)
 
 
 # START CART MODULE

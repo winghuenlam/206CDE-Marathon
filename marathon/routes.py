@@ -273,6 +273,7 @@ def addProduct():
         form.category.choices = [(row.categoryid, row.category_name) for row in Category.query.all()]
         form.gender.choices = [(row.genderid, row.gender_name) for row in Gender.query.all()]
         product_icon1 = "" #safer way in case the image is not included in the form
+        product_icon2 = "" #safer way in case the image is not included in the form
         if form.validate_on_submit():
             if form.image1.data:
                 product_icon1 = save_picture(form.image1.data)
@@ -289,10 +290,55 @@ def addProduct():
             db.session.add(product_gender)
             db.session.commit()
 
+
+            sizes = []
+            sizeAvailable = form.sizeAvailable.data.split(",")
+            for i in range(len(sizeAvailable)):
+                sizes.append(sizeAvailable[i])
+
+            productid = Product.query.with_entities(Product.productid).order_by(Product.productid.desc()).first()
+
+            for size in sizes:
+                add_size = Size(size_name=size, productid=productid[0], quantity="")
+                db.session.add(add_size)
+                db.session.commit()
+
+                #print(size)
             flash(f'Product {form.productName} added successfully', 'success')
-            return redirect(url_for('getProducts'))
+
+
+            return (redirect(url_for('addProduct_quantity', productid=productid[0])))
         return render_template("addProduct.html", form=form, legend="New Product", isAdmin=isAdmin)
     return redirect(url_for('index'))
+
+
+@app.route("/admin/products/new/quantity/<int:productid>")
+def addProduct_quantity(productid):
+    if isUserAdmin():
+        isAdmin = True
+        sizes = getProductSizes(productid)
+        return render_template("addProductQty.html", productid=productid, sizes=sizes, isAdmin=isAdmin)
+
+    return redirect(url_for('index'))
+
+
+@app.route("/admin/products/new/quantity/submit", methods=['GET', 'POST'])
+def addProduct_quantity_submit():
+    if isUserAdmin():
+        isAdmin = True
+        productid = request.args.get('productid')
+        #sizes = Size.query.with_entities(Size.sizeid, Size.quantity).filter(Size.productid == int(productid)).all()
+        sizes = db.session.query(Size).filter(Size.productid == int(productid))
+
+        if request.method == 'POST':
+            for size in sizes:
+                Qty = request.form[str(size.sizeid)]
+                size.quantity = int(Qty)
+
+            db.session.commit()
+
+        return redirect(url_for('getProducts'))
+
 
 
 @app.route("/product/<int:product_id>", methods=['GET'])
@@ -358,10 +404,15 @@ def update_product(product_id):
             flash('This product has been updated!', 'success')
             return redirect(url_for('getProducts'))
         elif request.method == 'GET':
+            #productSize = Size.query.with_entities(Size.size_name).filter(Size.productid == product_id).all()
+            #print(productSize)
+
             form.productName.data = product.product_name
             form.productDescription.data = product.description
             form.productPrice.data = product.regular_price
+            form.discountedPrice.data = product.discounted_price
             form.productQuantity.data = product.quantity
+
         return render_template('addProduct.html', legend="Update Product", form=form, isAdmin=isAdmin)
     return redirect(url_for('index'))
 
