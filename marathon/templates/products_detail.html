@@ -25,103 +25,31 @@
                 </div>
                 <div class="card-body">
                   <ul class="nav nav-pills flex-column category-menu">
-                    <li><a href="category.html" class="nav-link">Men <span class="badge badge-secondary">42</span></a>
+                    <li><a href="category.html" class="nav-link">Men </a>
                       <ul class="list-unstyled">
-                        <li><a href="category.html" class="nav-link">T-shirts</a></li>
-                        <li><a href="category.html" class="nav-link">Shirts</a></li>
+                        <li><a href="category.html" class="nav-link">Tops</a></li>
                         <li><a href="category.html" class="nav-link">Pants</a></li>
-                        <li><a href="category.html" class="nav-link">Accessories</a></li>
+                        <li><a href="category.html" class="nav-link">Shoes</a></li>
                       </ul>
                     </li>
-                    <li><a href="category.html" class="nav-link active">Ladies  <span class="badge badge-light">123</span></a>
+                    <li><a href="category.html" class="nav-link">Ladies  </a>
                       <ul class="list-unstyled">
-                        <li><a href="category.html" class="nav-link">T-shirts</a></li>
-                        <li><a href="category.html" class="nav-link">Skirts</a></li>
+                        <li><a href="category.html" class="nav-link">Tops</a></li>
                         <li><a href="category.html" class="nav-link">Pants</a></li>
-                        <li><a href="category.html" class="nav-link">Accessories</a></li>
+                        <li><a href="category.html" class="nav-link">Shoes</a></li>
                       </ul>
                     </li>
-                    <li><a href="category.html" class="nav-link">Kids  <span class="badge badge-secondary">11</span></a>
+                    <li><a href="category.html" class="nav-link">Children </a>
                       <ul class="list-unstyled">
-                        <li><a href="category.html" class="nav-link">T-shirts</a></li>
-                        <li><a href="category.html" class="nav-link">Skirts</a></li>
+                        <li><a href="category.html" class="nav-link">Tops</a></li>
                         <li><a href="category.html" class="nav-link">Pants</a></li>
-                        <li><a href="category.html" class="nav-link">Accessories</a></li>
+                        <li><a href="category.html" class="nav-link">Shoes</a></li>
                       </ul>
                     </li>
                   </ul>
                 </div>
               </div>
-              <div class="card sidebar-menu mb-4">
-                <div class="card-header">
-                  <h3 class="h4 card-title">Brands <a href="#" class="btn btn-sm btn-danger pull-right"><i class="fa fa-times-circle"></i> Clear</a></h3>
-                </div>
-                <div class="card-body">
-                  <form>
-                    <div class="form-group">
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Armani  (10)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Versace  (12)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Carlo Bruni  (15)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Jack Honey  (14)
-                        </label>
-                      </div>
-                    </div>
-                    <button class="btn btn-default btn-sm btn-primary"><i class="fa fa-pencil"></i> Apply</button>
-                  </form>
-                </div>
-              </div>
-              <div class="card sidebar-menu mb-4">
-                <div class="card-header">
-                  <h3 class="h4 card-title">Colours <a href="#" class="btn btn-sm btn-danger pull-right"><i class="fa fa-times-circle"></i> Clear</a></h3>
-                </div>
-                <div class="card-body">
-                  <form>
-                    <div class="form-group">
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"><span class="colour white"></span> White (14)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"><span class="colour blue"></span> Blue (10)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"><span class="colour green"></span>  Green (20)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"><span class="colour yellow"></span>  Yellow (13)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"><span class="colour red"></span>  Red (10)
-                        </label>
-                      </div>
-                    </div>
-                    <button class="btn btn-default btn-sm btn-primary"><i class="fa fa-pencil"></i> Apply</button>
-                  </form>
-                </div>
-              </div>
-              <!-- *** MENUS AND FILTERS END ***-->
+             
               <div class="banner"><a href="#"><img src="{{url_for('static', filename='img/banner.jpg')}}" alt="sales 2014" class="img-fluid"></a></div>
             </div>
             <div class="col-lg-9 order-1 order-lg-2">
@@ -137,19 +65,30 @@
                 </div>
                 <div class="col-md-6">
                   <div class="box">
-                    <h3 class="text-center">{{product.product_name}}</h3>
-                    <p class="goToDescription"><a href="#details" class="scroll-to">Scroll to product details, material &amp; care and sizing</a></p>
-                    <p class="price">$ {{product.regular_price}}</p>
-                    <p> Stock: {{product.quantity}}</p>
+                    <form method="POST" action="/addToCart?productId={{product.productid}}">
+                      <h3 class="text-center">{{product.product_name}}</h3>
+                      <p class="goToDescription"><a href="#details" class="scroll-to">Scroll to product details, material &amp; care and sizing</a></p>
+                      <p class="price">$ {{product.regular_price}}</p>
+                      <p> Stock: </p>
+                      {% for i in range(productQty|length) %}
+                      <p>{{productQty[i][0]}}: {{productQty[i][1]}}</p>
+                      {% endfor %}
 
-                    <div class="form-group row">
-                      <label for="qty" class="col-sm-2 col-form-label">Quantity:(doesnt work) </label>
-                      <div class="col-sm-5">
-                        <input type="number" class="form-control" id="qty" name="qty">
-                      </div>
-                    </div>
+                      <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        {% for size in sizes %}
+                          {% if size.quantity > 0 %}
+                            <label class="btn btn-danger">
+                              <input type="radio" name="size" id="{{size.sizeid}}" value="{{size.sizeid}}" autocomplete="off">{{size.size_name}}
+                            </label>
+                          
+                          {% endif %}
+                        {% endfor %}
+                      </div><br><br>
 
-                    <p class="text-center buttons"><a class="btn btn-primary" href="/addToCart?productId={{product.productid}}"><i class="fa fa-shopping-cart"></i> Add to cart</a></p>
+                      
+
+                      <p class="text-center buttons"><button class="btn btn-primary" type="submit"><i class="fa fa-shopping-cart"></i> Add to cart</a></button></p>
+                    </form>
 
 
                   </div>

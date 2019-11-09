@@ -24,52 +24,19 @@
                 </div>
                 <div class="card-body">
                   <ul class="nav nav-pills flex-column category-menu">
-                    {% for i in range(gender|length) %}
-                    <li><a href="/displayGender?genderId={{i+1}}" class="nav-link">{{gender[i]}}</a>
+                    {% for x in range(gender|length) %}
+                    <li><a href="/displayGender?genderId={{gender[x][0]}}" class="nav-link">{{gender[x][1]}}</a>
                       <ul class="list-unstyled">
-                        <li><a href="ladies_tops.html" class="nav-link">Tops</a></li>
-                        <li><a href="ladies_pants.html" class="nav-link">Pants</a></li>
-                        <li><a href="ladies_shoes.html" class="nav-link">Shoes</a></li>
+                        {% for y in range(category|length) %}
+                        <li><a href="/displayGenderCategory?genderId={{gender[x][0]}}&categoryId={{category[y][0]}}" class="nav-link">{{category[y][1]}}</a></li>
+                        {% endfor %}
                       </ul>
                     </li>
                     {% endfor %}
                   </ul>
                 </div>
               </div>
-              <div class="card sidebar-menu mb-4">
-                <div class="card-header">
-                  <h3 class="h4 card-title">Brands <a href="#" class="btn btn-sm btn-danger pull-right"><i class="fa fa-times-circle"></i> Clear</a></h3>
-                </div>
-                <div class="card-body">
-                  <form>
-                    <div class="form-group">
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Armani  (10)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Versace  (12)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Carlo Bruni  (15)
-                        </label>
-                      </div>
-                      <div class="checkbox">
-                        <label>
-                          <input type="checkbox"> Jack Honey  (14)
-                        </label>
-                      </div>
-                    </div>
-                    <button class="btn btn-default btn-sm btn-primary"><i class="fa fa-pencil"></i> Apply</button>
-                  </form>
-                </div>
-              </div>
               
-              <!-- *** MENUS AND FILTERS END ***-->
               <div class="banner"><a href="#"><img src="{{url_for('static', filename='img/banner.jpg')}}" alt="sales 2014" class="img-fluid"></a></div>
             </div>
             <div class="col-lg-9">

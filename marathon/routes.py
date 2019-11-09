@@ -50,9 +50,11 @@ def registrationForm():
 def register():
     if request.method == 'POST':
         # Parse form data
-        msg = extractAndPersistUserDataFromForm(request)
-        return render_template("index.html", error=msg)
-
+        error, msg = extractAndPersistUserDataFromForm(request)
+        if error == True:
+            return render_template("register.html", registermsg=msg, registererror=error)
+        else:
+            return redirect(url_for('index'))
 
 @app.route("/")
 @app.route("/index")
@@ -69,32 +71,33 @@ def index():
                                categoryData=categoryData, isAdmin=isAdmin)
     return render_template('index.html')
 
-''' 
+
 @app.route("/displayGenderCategory")
 def displayGenderCategory():
     isAdmin = isUserAdmin()
-    loggedIn, firstName, noOfItems, userid = getLoginUserDetails()
     categoryId = request.args.get("categoryId")
     genderId = request.args.get("genderId")
 
     productDetails = Product.query.join(ProductCategory, Product.productid == ProductCategory.productid) \
-        .add_columns(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price,
-                     Product.image) \
         .join(ProductGender, Product.productid == ProductGender.productid) \
         .join(Category, Category.categoryid == ProductCategory.categoryid) \
-        .filter(Category.categoryid == int(categoryId)) \
-        .add_columns(Category.category_name) \
         .join(Gender, Gender.genderid == ProductGender.genderid) \
         .filter(Gender.genderid == int(genderId)) \
-        .add_columns(Gender.gender_name) \
+        .filter(Category.categoryid == int(categoryId)) \
+        .filter(ProductGender.genderid == int(genderId)) \
+        .filter(ProductCategory.categoryid == int(categoryId)) \
         .all()
 
-    categoryName = productDetails[0].category_name
-    genderName = productDetails[0].gender_name
-    data = massageItemData(productDetails)
-    return render_template('category_products.html', data=data, loggedIn=loggedIn, firstName=firstName,
-                           noOfItems=noOfItems, categoryName=categoryName, genderName=genderName, userid=userid, isAdmin=isAdmin)
-'''
+
+    gender, category = getGenderCategory()
+    genderName = Gender.query.with_entities(Gender.gender_name).filter(Gender.genderid == genderId).first()
+    categoryName = Category.query.with_entities(Category.category_name).filter(Category.categoryid == categoryId).first()
+
+    products = massageItemData(productDetails)
+    return render_template('gender_category_products.html', products=products, 
+                            productDetails=productDetails, gender=gender, category=category, genderName=genderName[0],
+                           categoryName=categoryName[0], isAdmin=isAdmin)
+
 
 @app.route("/displayGender")
 def displayGender():
@@ -102,29 +105,30 @@ def displayGender():
     genderId = request.args.get("genderId")
 
     productDetailsByGenderId = Product.query.join(ProductGender, Product.productid == ProductGender.productid) \
-        .add_columns(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price,
-                     Product.image, Product.image2) \
         .join(Gender, Gender.genderid == ProductGender.genderid) \
+        .add_columns(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price,
+                     Product.image, Product.image2, Gender.gender_name) \
         .filter(Gender.genderid == int(genderId)) \
         .all()
 
     genderName = Gender.query.with_entities(Gender.gender_name).filter(Gender.genderid == int(genderId)).first()
 
+    gender, category = getGenderCategory()
 
-    #genderName = productDetailsByGenderId[0].gender_name
+    genderName = Gender.query.with_entities(Gender.gender_name).filter(Gender.genderid == genderId).first()
     products = massageItemData(productDetailsByGenderId)
-    gender = [(row.gender_name) for row in Gender.query.all()]
     #products = Product.query.all()
-    return render_template('gender_products.html', products=products, genderName=genderName[0], gender=gender, isAdmin=isAdmin)
+    return render_template('gender_products.html', products=products, gender=gender, genderName=genderName[0], category=category, isAdmin=isAdmin)
 
 
-@app.route("/addToCart")
+@app.route("/addToCart", methods=['POST'])
 def addToCart():
     if isUserLoggedIn():
         productId = int(request.args.get('productId'))
+        sizeChoice = request.form['size']
 
         # Using Flask-SQLAlchmy SubQuery
-        extractAndPersistKartDetailsUsingSubquery(productId)
+        extractAndPersistKartDetailsUsingSubquery(productId, sizeChoice)
 
         # Using Flask-SQLAlchmy normal query
         # extractAndPersistKartDetailsUsingkwargs(productId)
@@ -152,9 +156,10 @@ def getUserOrders():
     if isUserLoggedIn():
         loggedIn, firstName, productCountinKartForGivenUser, userid = getLoginUserDetails()
 
-        orderDetails = db.session.query(Order, OrderedProduct, Product) \
+        orderDetails = db.session.query(Order, OrderedProduct, Product, Size) \
         .join(OrderedProduct, Order.orderid==OrderedProduct.orderid) \
         .join(Product, Product.productid==OrderedProduct.productid) \
+        .join(Size, Size.productid==OrderedProduct.productid) \
         .filter(Order.userid == userid) \
         .all()
 
@@ -249,12 +254,16 @@ def save_picture(form_picture):
     return picture_fn
 
 
-
 @app.route("/admin/products", methods=['GET'])
 def getProducts():
     if isUserAdmin():
         isAdmin = True
-        products = Product.query.all()
+        #products = Product.query.all()
+        products = Product.query.with_entities(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price) \
+        .join(Size, Product.productid == Size.productid) \
+        .add_columns(func.sum(Size.quantity).label('productQty')) \
+        .group_by(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price).all()
+        print(products)
         return render_template('adminProducts.html', products=products, isAdmin=isAdmin)
     return redirect(url_for('index'))
 
@@ -262,8 +271,8 @@ def getProducts():
 def products():
     isAdmin = isUserAdmin()
     products = Product.query.all()
-    gender = [(row.gender_name) for row in Gender.query.all()]
-    return render_template('products.html', products=products, gender=gender, isAdmin=isAdmin)
+    gender, category = getGenderCategory()
+    return render_template('products.html', products=products, gender=gender, isAdmin=isAdmin, category=category)
 
 @app.route("/admin/products/new", methods=['GET', 'POST'])
 def addProduct():
@@ -344,10 +353,10 @@ def addProduct_quantity_submit():
 @app.route("/product/<int:product_id>", methods=['GET'])
 def product(product_id):
     isAdmin = isUserAdmin()
-    product = Product.query.get_or_404(product_id)
-    productid = request.args.get('productId')#for add cart
-    productDetailsByProductId = getProductDetails(productid)#for add cart
-    return render_template('products_detail.html', product=product, isAdmin=isAdmin)
+    #productid = request.args.get('productId')#for add cart
+    product, sizes = getProductDetails(product_id)#for add cart
+    productQty = Size.query.with_entities(Size.size_name, Size.quantity).filter(Size.productid == product_id).all()
+    return render_template('products_detail.html', product=product, isAdmin=isAdmin, sizes=sizes, productQty=productQty)
    
 
 
@@ -356,12 +365,12 @@ def admin_product(product_id):
     if isUserAdmin():
         isAdmin = True
         loggedIn, firstName, noOfItems, userid = getLoginUserDetails()
-        product = Product.query.get_or_404(product_id)
-        productid = request.args.get('productId')#for add cart
-        productDetailsByProductId = getProductDetails(productid)#for add cart
+        product, sizeAvailable = getProductDetails(product_id)#for add cart
+        productQty = Size.query.with_entities(Size.size_name, Size.quantity).filter(Size.productid == product_id).all()
+
         return render_template('admin_products_detail.html', product=product, loggedIn=loggedIn,
                            firstName=firstName,
-                           noOfItems=noOfItems, isAdmin=isAdmin)
+                           noOfItems=noOfItems, isAdmin=isAdmin, productQty=productQty)
     return redirect(url_for('index'))
   
 
@@ -370,6 +379,8 @@ def update_product(product_id):
     if isUserAdmin():
         isAdmin = True
         product = Product.query.get_or_404(product_id)
+        showdbPoductSizes, dbPoductSizes = formatDBProductSize(product_id)
+
         form = addProductForm()
         form.category.choices = [(row.categoryid, row.category_name) for row in Category.query.all()]
         form.gender.choices = [(row.genderid, row.gender_name) for row in Gender.query.all()]
@@ -381,7 +392,6 @@ def update_product(product_id):
             product.product_name = form.productName.data
             product.productDescription = form.productDescription.data
             product.quantity = form.productQuantity.data
-            # product.discounted_price = form.data.discounted_price = 15
             product.regular_price = form.productPrice.data
             product.discounted_price = form.discountedPrice.data
             db.session.commit()
@@ -401,16 +411,38 @@ def update_product(product_id):
                 db.session.delete(product_gender)
                 db.session.commit()
 
+            input_sizes = []
+            input_sizeAvailable = form.sizeAvailable.data.split(",")
+            for i in range(len(input_sizeAvailable)):
+                input_sizes.append(input_sizeAvailable[i])
+
+            #compare dbPoductSizes vs. input_sizes
+            add_size_list = []
+            del_size_list = []
+            for input_item in input_sizes:
+                if input_item not in dbPoductSizes:
+                    add_size_list.append(input_item)
+            for db_item in dbPoductSizes:
+                if db_item not in input_sizes:
+                    del_size_list.append(db_item)
+            # add and del size record
+            for add_item in add_size_list:
+                add_db = Size(size_name=add_item, productid=product_id, quantity="")
+                db.session.add(add_db)
+                db.session.commit()
+            for del_item in del_size_list:
+                Size.query.filter_by(productid=product_id, size_name=del_item).delete()
+            db.session.commit()
+
             flash('This product has been updated!', 'success')
-            return redirect(url_for('getProducts'))
+            return redirect(url_for('addProduct_quantity', productid=product_id))
         elif request.method == 'GET':
-            #productSize = Size.query.with_entities(Size.size_name).filter(Size.productid == product_id).all()
-            #print(productSize)
 
             form.productName.data = product.product_name
             form.productDescription.data = product.description
             form.productPrice.data = product.regular_price
             form.discountedPrice.data = product.discounted_price
+            form.sizeAvailable.data = showdbPoductSizes
             form.productQuantity.data = product.quantity
 
         return render_template('addProduct.html', legend="Update Product", form=form, isAdmin=isAdmin)
@@ -456,9 +488,10 @@ def getOrders():
     if isUserAdmin():
         isAdmin = True
 
-        orderDetails = db.session.query(Order, OrderedProduct, Product) \
+        orderDetails = db.session.query(Order, OrderedProduct, Product, Size) \
         .join(OrderedProduct, Order.orderid==OrderedProduct.orderid) \
         .join(Product, Product.productid==OrderedProduct.productid) \
+        .join(Size, Size.productid==OrderedProduct.productid) \
         .all()
 
         #products = Product.query.all()
@@ -470,7 +503,8 @@ def getOrders():
 def removeFromCart():
     if isUserLoggedIn():
         productId = int(request.args.get('productId'))
-        removeProductFromCart(productId)
+        sizeId = int(request.args.get('sizeId'))
+        removeProductFromCart(productId, sizeId)
         return redirect(url_for('cart'))
     else:
         return redirect(url_for('loginForm'))
@@ -523,7 +557,6 @@ def seeTrends():
                              ORDER BY TotalQuantity DESC ")
 
         products = cur.fetchall()
-        cur.close()
         x = []
         y = []
 

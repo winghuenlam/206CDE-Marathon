@@ -48,14 +48,11 @@ class Product(db.Model):
     description = db.Column(db.String(100), nullable=False)
     image = db.Column(db.String(100), nullable=False)
     image2 = db.Column(db.String(100), nullable=False)
-    quantity = db.Column(db.Integer)
     regular_price = db.Column(db.DECIMAL)
     discounted_price = db.Column(db.DECIMAL)
-    product_rating = db.Column(db.DECIMAL)
-    product_review = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
-        return f"Product('{self.productid}','{self.product_name}','{self.description}', '{self.image}',  '{self.quantity}', '{self.regular_price}', '{self.discounted_price}')"
+        return f"Product('{self.productid}','{self.product_name}','{self.description}', '{self.image}', '{self.regular_price}', '{self.discounted_price}')"
 
 
 class Size(db.Model):
@@ -93,10 +90,11 @@ class Cart(db.Model):
     __table_args__ = {'extend_existing': True}
     userid = db.Column(db.Integer, db.ForeignKey('user.userid'), nullable=False, primary_key=True)
     productid = db.Column(db.Integer, db.ForeignKey('product.productid'), nullable=False, primary_key=True)
+    sizeid = db.Column(db.Integer, db.ForeignKey('size.sizeid'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f"Cart('{self.userid}', '{self.productid}, '{self.quantity}')"
+        return f"Cart('{self.userid}', '{self.productid}, '{self.sizeid}, '{self.quantity}')"
 
 
 class Order(db.Model):
@@ -114,12 +112,12 @@ class OrderedProduct(db.Model):
     __table_args__ = {'extend_existing': True}
     ordproductid = db.Column(db.Integer, primary_key=True)
     orderid = db.Column(db.Integer,db.ForeignKey('order.orderid'), nullable=False)
-    productid = db.Column(db.Integer,db.ForeignKey('product.productid'), nullable=False)
+    productid = db.Column(db.Integer,db.ForeignKey('product.productid'))
+    sizeid = db.Column(db.Integer, db.ForeignKey('size.sizeid'))
     quantity = db.Column(db.Integer, nullable=False)
 
-
     def __repr__(self):
-        return f"Order('{self.ordproductid}', '{self.orderid}','{self.productid}','{self.quantity}')"
+        return f"Order('{self.ordproductid}', '{self.orderid}','{self.productid}', '{self.sizeid},'{self.quantity}')"
 
 
 

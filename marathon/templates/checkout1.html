@@ -1,3 +1,7 @@
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/checkoutvalidate.js') }}"></script>
+{% endblock %}
+
 {% extends "base.html" %}
 {% block content %}
     <div id="all">
@@ -15,7 +19,7 @@
             </div>
             <div id="checkout" class="col-lg-9">
               <div class="box">
-                <form method="POST" action="/createOrder?total={{totalsum}}">
+                <form method="POST" action="/createOrder?total={{totalsum}}" onsubmit="return validate();">
                   <h1>Checkout</h1>
                   
                   <div class="content py-3">
@@ -23,7 +27,7 @@
                       <div class="col-md">
                         <div class="form-group">
                           <label for="firstname">Full Name</label>
-                          <input id="firstname" name="fullname" type="text" class="form-control" value="{{userdetails.fname}} {{userdetails.lname}}">
+                          <input id="firstname" name="fullname" type="text" class="form-control" value="{{userdetails.fname}} {{userdetails.lname}}" required>
                         </div>
                       </div>
                       
@@ -33,7 +37,7 @@
                       <div class="col-md">
                         <div class="form-group">
                           <label for="company">Address</label>
-                          <input id="address" name="address" type="text" class="form-control" value="{{userdetails.address}}">
+                          <input id="address" name="address" type="text" class="form-control" value="{{userdetails.address}}" required>
                         </div>
                       </div>
                     </div>
@@ -42,13 +46,13 @@
                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="phone">Telephone</label>
-                          <input id="phone" name="phone" type="text" class="form-control" value="{{userdetails.phone}}">
+                          <input id="phone" name="phone" type="text" class="form-control" maxlength="8" value="{{userdetails.phone}}" required>
                         </div>
                       </div>
                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="email">Email</label>
-                          <input id="email" name="email" type="text" class="form-control" value="{{userdetails.email}}">
+                          <input id="email" name="email" type="email" class="form-control" value="{{userdetails.email}}" required>
                         </div>
                       </div>
                     </div>
@@ -72,7 +76,7 @@
                       <div class="col-md-6">
                         <div class="form-group">
                           <label>Card Number</label>
-                          <input id="cardnum" name="cardnum" type="text" class="form-control">
+                          <input id="cardnum" name="cardnum" maxlength="16" type="text" class="form-control" required>
                         </div>
                       </div>
                     </div>
@@ -80,7 +84,7 @@
 
 
                   </div>
-                  <div class="box-footer d-flex justify-content-between"><a href="basket.html" class="btn btn-outline-secondary"><i class="fa fa-chevron-left"></i>Back to Basket</a>
+                  <div class="box-footer d-flex justify-content-between"><a href="{{ url_for('cart') }}" class="btn btn-outline-secondary"><i class="fa fa-chevron-left"></i>Back to Cart</a>
                     <button type="submit" class="btn btn-primary">Confirm Checkout<i class="fa fa-chevron-right"></i></button>
                   </div>
                 </form>

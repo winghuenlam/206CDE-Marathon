@@ -1,3 +1,7 @@
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/validateForm.js') }}"></script>
+{% endblock %}
+
 {% extends "base.html" %}
 {% block content %}
   
@@ -20,39 +24,45 @@
                 <p class="lead">Not our registered customer yet?</p>
                 <p>With registration with us new world of fashion, fantastic discounts and much more opens to you! The whole process will not take you more than a minute!</p>
                 <p class="text-muted">If you have any questions, please feel free to <a href="contact.html">contact us</a>, our customer service center is working for you 24/7.</p>
+                {% if registererror %}
+                  <div class="alert alert-danger" role="alert">
+                    {{registermsg}}
+                  </div>
+                {% endif %}
+
                 <hr>
                 <form name="register" action="http://localhost:5000/register/submit" method="POST" onsubmit="return validate();">
                   <div class="form-group">
                     <label for="firstname">First Name:</label>
-                    <input id="fname" name="firstName" type="text" class="form-control">
+                    <input id="fname" name="firstName" type="text" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="lastname">Last Name:</label>
-                    <input id="lname" name="lastName" type="text" class="form-control">
+                    <input id="lname" name="lastName" type="text" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="username">Username:</label>
-                    <input id="username" name="username" type="text" class="form-control">
+                    <input id="username" name="username" type="text" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="email">Email:</label>
-                    <input id="email" name="email" type="email" class="form-control">
+                    <input id="email" name="email" type="email" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="name">Phone:</label>
-                    <input id="phone" name="phone" type="tel" class="form-control">
+                    <input id="phone" name="phone" type="tel" maxlength="8" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="password">Password</label>
-                    <input id="password" name="password" type="password" class="form-control">
+                    <input id="fpassword" name="password" type="password" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="cpassword">Confirm Password</label>
-                    <input id="cpassword" name="cpassword" type="password" class="form-control">
+                    <input id="cpassword" name="cpassword" type="password" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="name">Address:</label>
-                    <input id="address" name="address" type="text" class="form-control">
+                    <input id="address" name="address" type="text" class="form-control" required>
                   </div>
                   <div class="text-center">
                     <button type="submit" class="btn btn-primary"><i class="fa fa-user-md"></i> Register</button>
@@ -92,8 +102,4 @@
       </div>
     </div>
     
-{% endblock %}
-
-{% block head %}
-    <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/validateForm.js') }}"></script> -->
 {% endblock %}

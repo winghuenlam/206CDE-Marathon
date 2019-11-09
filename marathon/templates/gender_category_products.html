@@ -33,26 +33,30 @@
                       </ul>
                     </li>
                     {% endfor %}
-                   
                   </ul>
                 </div>
               </div>
+              
               
               <!-- *** MENUS AND FILTERS END ***-->
               <div class="banner"><a href="#"><img src="{{url_for('static', filename='img/banner.jpg')}}" alt="sales 2014" class="img-fluid"></a></div>
             </div>
             <div class="col-lg-9">
               <div class="box">
-                <h1>All Products</h1>
+                <h1 style="text-transform: uppercase;">{{genderName}} - {{categoryName}}</h1>
                 <p>We offer wide selection of the best products we have found and carefully selected worldwide.</p>
               </div>
               
               <div class="row products">
 
-                {% for product in products %}
+               
+                
 
+                {% for product in products %}
+                {% for row in product %}
                 <div class="col-lg-4 col-md-6">
-                      {% if product.regular_price != product.discounted_price %}
+
+                  {% if row['regular_price'] != row['discounted_price'] %}
                         <div class="ribbon sale">
                             <div class="theribbon">SALE</div>
                             <div class="ribbon-background"></div>
@@ -62,26 +66,28 @@
                   <div class="product">
                     <div class="flip-container">
                       <div class="flipper">
-                        <div class="front"><a href="/product/{{product.productid|string}}"><img src="{{ url_for('static', filename='img/' + product.image)}}" style="background-color:white;" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="/product/{{product.productid|string}}"><img src="{{ url_for('static', filename='img/' + product.image2)}}" style="background-color:white;" alt="" class="img-fluid"></a></div>
+                        <div class="front"><a href="/product/{{row['productid']|string}}"><img src="{{ url_for('static', filename='img/' + row['image'] ) }}" style="background-color:white;" alt="" class="img-fluid"></a></div>
+                        <div class="back"><a href="/product/{{row['productid']|string}}"><img src="{{ url_for('static', filename='img/' + row['image2'])}}" style="background-color:white;" alt="" class="img-fluid"></a></div>
                       </div>
-                    </div><a href="/product/{{product.productid|string}}" class="invisible"><img src="{{ url_for('static', filename='img/' + product.image)}}" alt="" class="img-fluid"></a>
+                    </div><a href="/product/{{product.productid|string}}" class="invisible"><img src="{{ url_for('static', filename='img/' + row['image2'] ) }}" alt="" class="img-fluid"></a>
                     <div class="text">
-                      <h3><a href="#">{{product.product_name}}</a></h3>
+                      <h3><a href="#">{{row['product_name']}}</a></h3>
                       <p class="price"> 
-                        
-                        {% if product.regular_price == product.discounted_price %}
-                          ${{product.regular_price}}
+
+
+                        {% if row['regular_price'] == row['discounted_price'] %}
+                          ${{row['regular_price']}}
                         {% else %}
-                          <del>${{product.regular_price}} </del>${{product.discounted_price}}
+                          <del>${{row['regular_price']}} </del>${{row['discounted_price']}}
                         {% endif %}
                       </p>
-                      <p class="buttons"><a href="/product/{{product.productid|string}}" class="btn btn-outline-secondary">View detail</a>
+                      <p class="buttons"><a href="/product/{{row['productid']|string}}" class="btn btn-outline-secondary">View detail</a><a href="/addToCart?productId={{row['productid']}}" class="btn btn-primary"><i class="fa fa-shopping-cart"></i>Add to cart</a></p>
                     </div>
                     <!-- /.text-->
                   </div>
                   <!-- /.product            -->
                 </div>
+                {% endfor %}
                 {% endfor %}
                
                 <!-- /.products-->

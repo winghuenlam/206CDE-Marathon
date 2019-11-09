@@ -140,7 +140,10 @@
                     <h3 class="text-center">{{product.product_name}}</h3>
                     <p class="goToDescription"><a href="#details" class="scroll-to">Scroll to product details, material &amp; care and sizing</a></p>
                     <p class="price">$ {{product.regular_price}}</p>
-                    <p> Stock: {{product.quantity}}</p>
+                    <p> Stock: </p>
+                    {% for i in range(productQty|length) %}
+                    <p>{{productQty[i][0]}}: {{productQty[i][1]}}</p>
+                    {% endfor %}
 
                     <div>
                     <a class="btn btn-primary btn-sm mt-1 mb-1" href="{{ url_for('update_product', product_id=product.productid) }}">Update</a>
@@ -184,110 +187,7 @@
                 <h4>Product details</h4>
                 {{product.description}}
               </div>
-              <div class="row same-height-row">
-                <div class="col-md-3 col-sm-6">
-                  <div class="box same-height">
-                    <h3>You may also like these products</h3>
-                  </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product2.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product2_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product2.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product1.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product1_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product1.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product3.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product3_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product3.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-              </div>
-              <div class="row same-height-row">
-                <div class="col-md-3 col-sm-6">
-                  <div class="box same-height">
-                    <h3>Products viewed recently</h3>
-                  </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product2.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product2_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product2.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product1.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product1_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product1.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="product same-height">
-                    <div class="flip-container">
-                      <div class="flipper">
-                        <div class="front"><a href="detail.html"><img src="img/product3.jpg" alt="" class="img-fluid"></a></div>
-                        <div class="back"><a href="detail.html"><img src="img/product3_2.jpg" alt="" class="img-fluid"></a></div>
-                      </div>
-                    </div><a href="detail.html" class="invisible"><img src="img/product3.jpg" alt="" class="img-fluid"></a>
-                    <div class="text">
-                      <h3>Fur coat</h3>
-                      <p class="price">$143</p>
-                    </div>
-                  </div>
-                  <!-- /.product-->
-                </div>
-              </div>
+              
             </div>
             <!-- /.col-md-9-->
           </div>

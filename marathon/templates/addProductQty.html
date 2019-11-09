@@ -17,7 +17,7 @@
                 {% for size in sizes %}
                   <div class="form-group col-md-3">
                     <label>Size {{size.size_name}}:</label>
-                    <input id="{{size.sizid}}" name="{{size.sizeid}}" type="number" min="0" class="form-control">
+                    <input id="{{size.sizid}}" name="{{size.sizeid}}" type="number" min="0" class="form-control" value="{{size.quantity}}">
                   </div>
                 {% endfor %}
 

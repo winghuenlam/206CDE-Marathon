@@ -19,7 +19,7 @@ from marathon import cur
 def getAllProducts():
     itemData = Product.query.join(ProductCategory, Product.productid == ProductCategory.productid) \
         .add_columns(Product.productid, Product.product_name, Product.discounted_price, Product.description,
-                     Product.image, Product.quantity) \
+                     Product.image) \
         .join(Category, Category.categoryid == ProductCategory.categoryid) \
         .order_by(Category.categoryid.desc()) \
         .all()
@@ -53,12 +53,6 @@ def is_valid(email, password):
     # Using Flask-SQLAlchmy ORM
     userData = User.query.with_entities(User.email, User.password).all()
 
-    # Using Raw SQL Select Query
-    #cur = mysql.connection.cursor()
-    #cur.execute('SELECT email, password FROM "user"')
-    #userData = cur.fetchall()
-    #cur.close()
-
     for row in userData:
         if row.email == email and row.password == password:
             return True
@@ -88,7 +82,14 @@ def getLoginUserDetails():
 
 def getProductDetails(productId):
     productDetailsById = Product.query.filter(Product.productid == productId).first()
-    return productDetailsById
+    sizeAvailable = getProductSizes(productId)
+    return productDetailsById, sizeAvailable
+
+def getGenderCategory():
+    gender = [(row.genderid, row.gender_name) for row in Gender.query.all()]
+    category = [(row.categoryid, row.category_name) for row in Category.query.all()]
+    return gender, category
+
 
 def getUserDetails():
     if 'email' in session:
@@ -105,12 +106,21 @@ def extractAndPersistUserDataFromForm(request):
     phone = request.form['phone']
     username = request.form['username']
 
+    db_emails = User.query.with_entities(User.email).all()
+    for dbemail in db_emails:
+        if email == dbemail[0]:
+            error = True
+            msg = "This email has already been registered."
+            return error, msg
+    
     user = User(fname=firstName, lname=lastName, password=password, address=address,
                 email=email, phone=phone, username=username)
     db.session.add(user)
     db.session.flush()
     db.session.commit()
-    return "Registered Successfully"
+    error = False
+    msg = "Registered Successfully"
+    return error, msg
 
 
 def isUserLoggedIn():
@@ -133,19 +143,20 @@ def isUserAdmin():
 
 
 # Using Flask-SQL Alchemy SubQuery
-def extractAndPersistKartDetailsUsingSubquery(productId):
+def extractAndPersistKartDetailsUsingSubquery(productId, sizeId):
     userId = User.query.with_entities(User.userid).filter(User.email == session['email']).first()
     userId = userId[0]
 
-    subqury = Cart.query.filter(Cart.userid == userId).filter(Cart.productid == productId).subquery()
+    subqury = Cart.query.filter(Cart.userid == userId).filter(Cart.productid == productId).filter(Cart.sizeid == sizeId).subquery()
     qry = db.session.query(Cart.quantity).select_entity_from(subqury).all()
-
+    #print(subqury)
+    #print(qry)
     if len(qry) == 0:
-        cart = Cart(userid=userId, productid=productId, quantity=1)
+        cart = Cart(userid=userId, productid=productId, sizeid=sizeId, quantity=1)
+        db.session.add(cart)
     else:
-        cart = Cart(userid=userId, productid=productId, quantity=qry[0][0] + 1)
+        cart = db.session.query(Cart).filter_by(userid = userId, productid = productId, sizeid = sizeId).update({"quantity": qry[0][0] + 1})
 
-    db.session.merge(cart)
     db.session.flush()
     db.session.commit()
 
@@ -185,8 +196,21 @@ class addProductForm(FlaskForm):
     submit = SubmitField('Save')
 
 def getProductSizes(productid):
-    sizes = Size.query.with_entities(Size.sizeid, Size.size_name, Size.productid).filter(Size.productid == int(productid)).all()
+    sizes = Size.query.with_entities(Size.sizeid, Size.size_name, Size.productid, Size.quantity).filter(Size.productid == int(productid)).all()
     return(sizes)
+
+# create array for sizes stored in db
+# format sizes into "(value),(value),(value)"
+def formatDBProductSize(product_id):
+    dbsizes = getProductSizes(product_id)
+    showdbPoductSizes = dbsizes[0][1]
+    dbPoductSizes = [dbsizes[0][1]]
+    for i in range(1, len(dbsizes)):
+        dbPoductSizes.append(dbsizes[i][1])
+        showdbPoductSizes = showdbPoductSizes + "," + str(dbsizes[i][1])
+
+    return(showdbPoductSizes, dbPoductSizes)
+
 
 
 # START CART MODULE
@@ -194,30 +218,30 @@ def getProductSizes(productid):
 def getusercartdetails():
     userId = User.query.with_entities(User.userid).filter(User.email == session['email']).first()
 
-    productsincart = Product.query.join(Cart, Product.productid == Cart.productid) \
+    productsincart = Cart.query.join(Product, Product.productid == Cart.productid) \
         .add_columns(Product.productid, Product.product_name, Product.regular_price, Product.discounted_price, Cart.quantity, Product.image) \
+        .join(Size, Cart.sizeid == Size.sizeid) \
+        .add_columns(Size.sizeid, Size.size_name) \
         .add_columns(Product.discounted_price * Cart.quantity).filter(
         Cart.userid == userId[0])
     totalsum = 0
 
     for row in productsincart:
-        totalsum += row[7]
+        totalsum += row[9]
 
     return (productsincart, totalsum)
 
 
 # Removes products from cart when user clicks remove
-def removeProductFromCart(productId):
+def removeProductFromCart(productId, sizeId):
     userId = User.query.with_entities(User.userid).filter(User.email == session['email']).first()
     userId = userId[0]
-    kwargs = {'userid': userId, 'productid': productId}
-    cart = Cart.query.filter_by(**kwargs).first()
-    if productId is not None:
-        db.session.delete(cart)
-        db.session.commit()
-        flash("Product has been removed from cart !!")
-    else:
-        flash("failed to remove Product cart please try again !!")
+    kwargs = {'userid': userId, 'productid': productId, 'sizeid': sizeId}
+
+    Cart.query.filter_by(**kwargs).delete()
+    db.session.commit()
+    flash("Product has been removed from cart !!")
+ 
     return redirect(url_for('cart'))
 
 
@@ -276,23 +300,17 @@ def extractOrderdetails(request, totalsum):
 
 def addOrderedproducts(userId, orderid):
     #with session.no_autoflush:
-    cart = Cart.query.with_entities(Cart.productid, Cart.quantity).filter(Cart.userid == userId)
+    cart = Cart.query.with_entities(Cart.productid, Cart.quantity, Cart.sizeid).filter(Cart.userid == userId)
     
 
     for item in cart:
         
-        orderedproduct = OrderedProduct(orderid=orderid, productid=item.productid, quantity=item.quantity)
+        orderedproduct = OrderedProduct(orderid=orderid, productid=item.productid, sizeid=item.sizeid, quantity=item.quantity)
         
         db.session.add(orderedproduct)
 
-        '''
-        sql = "insert into ordered_product(orderid, productid, quantity) values({0},{1},{2})".format(orderid,item.productid,item.quantity)
-        cur.execute(sql)
-        db.commit()
-        '''
-
-        product_qty = Product.query.filter_by(productid=item.productid).first()
-        product_qty.quantity = product_qty.quantity - item.quantity
+        size_qty = Size.query.filter_by(productid=item.productid, sizeid=item.sizeid).first()
+        size_qty.quantity = size_qty.quantity - item.quantity
         
         db.session.flush()   
         db.session.commit()

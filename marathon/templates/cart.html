@@ -22,6 +22,7 @@
                       <thead>
                         <tr>
                           <th colspan="2">Product</th>
+                          <th>Size</th>
                           <th>Quantity</th>
                           <th>Unit price</th>
                           <th>Discount</th>
@@ -33,20 +34,21 @@
                         <tr>
                           <td><a href="/product/{{row[1]|string}}"><img src="{{ url_for('static', filename='img/' + row[6])}}" alt="{{row[2]}}"></a></td>
                           <td><a href="/product/{{row[1]|string}}">{{row[2]}}</a></td>
+                          <td>{{row[8]}}</td>
                           <td>
                             <input type="number" value="{{row[5]}}" class="form-control">
                           </td>
                           <td>${{row[3]}}</td>
-                          <td>${{row[4]}}</td>
-                          <td>${{row[7]}}</td>
-                          <td><a href="/removeFromCart?productId={{row[1]}}"><i class="fa fa-trash-o"></i></a></td>
+                          <td>${{row[3] - row[4]}}</td>
+                          <td>${{row[9]}}</td>
+                          <td><a href="/removeFromCart?productId={{row[1]}}&sizeId={{row[7]}}"><i class="fa fa-trash-o"></i></a></td>
                         </tr>
                         
                         {% endfor %}
                       </tbody>
                       <tfoot>
                         <tr>
-                          <th colspan="5">Total</th>
+                          <th colspan="6">Total</th>
                           <th colspan="2">${{totalsum}}</th>
                         </tr>
                       </tfoot>
@@ -56,8 +58,11 @@
                   <div class="box-footer d-flex justify-content-between flex-column flex-lg-row">
                     <div class="left"><a href="{{url_for('products')}}" class="btn btn-outline-secondary"><i class="fa fa-chevron-left"></i> Continue shopping</a></div>
                     <div class="right">
-                      <button class="btn btn-outline-secondary"><i class="fa fa-refresh"></i> Update cart</button>
-                      <button type="submit" class="btn btn-primary" href="/checkoutPage?userId={{userid}}">Proceed to checkout <i class="fa fa-chevron-right"></i></button>
+                      {% if totalsum > 0 %}
+                        <button type="submit" class="btn btn-primary" href="/checkoutPage?userId={{userid}}">Proceed to checkout <i class="fa fa-chevron-right"></i></button>
+                      {% else %}
+                        <button type="submit" class="btn btn-primary" href="#" disabled>Proceed to checkout <i class="fa fa-chevron-right"></i></button>
+                      {% endif %}
                     </div>
                   </div>
                 </form>
