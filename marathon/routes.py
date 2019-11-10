@@ -281,15 +281,15 @@ def addProduct():
         form = addProductForm()
         form.category.choices = [(row.categoryid, row.category_name) for row in Category.query.all()]
         form.gender.choices = [(row.genderid, row.gender_name) for row in Gender.query.all()]
-        product_icon1 = "" #safer way in case the image is not included in the form
-        product_icon2 = "" #safer way in case the image is not included in the form
+        product_icon1 = "comingsoon.png" #safer way in case the image is not included in the form
+        product_icon2 = "comingsoon.png" #safer way in case the image is not included in the form
         if form.validate_on_submit():
             if form.image1.data:
                 product_icon1 = save_picture(form.image1.data)
             if form.image2.data:
                 product_icon2 = save_picture(form.image2.data)
-            product = Product(product_name=form.productName.data, description=form.productDescription.data, image=product_icon1, image2=product_icon2, quantity=form.productQuantity.data, discounted_price=form.discountedPrice.data, product_rating=0, product_review=" ", regular_price=form.productPrice.data)
-
+            product = Product(product_name=form.productName.data, description=form.productDescription.data, image=product_icon1, image2=product_icon2, discounted_price=form.discountedPrice.data, regular_price=form.productPrice.data)
+            print(product_icon2)
             db.session.add(product)
             db.session.commit()
             product_category = ProductCategory(categoryid=form.category.data, productid=product.productid)
@@ -391,7 +391,6 @@ def update_product(product_id):
                 product.image2 = save_picture(form.image2.data)
             product.product_name = form.productName.data
             product.productDescription = form.productDescription.data
-            product.quantity = form.productQuantity.data
             product.regular_price = form.productPrice.data
             product.discounted_price = form.discountedPrice.data
             db.session.commit()
@@ -443,7 +442,6 @@ def update_product(product_id):
             form.productPrice.data = product.regular_price
             form.discountedPrice.data = product.discounted_price
             form.sizeAvailable.data = showdbPoductSizes
-            form.productQuantity.data = product.quantity
 
         return render_template('addProduct.html', legend="Update Product", form=form, isAdmin=isAdmin)
     return redirect(url_for('index'))

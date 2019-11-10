@@ -189,7 +189,6 @@ class addProductForm(FlaskForm):
     productDescription = TextAreaField('Product Description:', validators=[DataRequired()])
     productPrice = FloatField('Product Price:', validators=[DataRequired()])
     discountedPrice = FloatField('Discounted Price:', validators=[DataRequired()])
-    productQuantity = IntegerField('Product Quantity:(del soon)', validators=[DataRequired()])
     sizeAvailable = StringField('Size available:', validators=[DataRequired()])
     image1 = FileField('Product Image 1', validators=[FileAllowed(['jpg', 'png'])])
     image2 = FileField('Product Image 2', validators=[FileAllowed(['jpg', 'png'])])
