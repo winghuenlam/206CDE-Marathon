@@ -156,12 +156,16 @@ def getUserOrders():
     if isUserLoggedIn():
         loggedIn, firstName, productCountinKartForGivenUser, userid = getLoginUserDetails()
 
-        orderDetails = db.session.query(Order, OrderedProduct, Product, Size) \
-        .join(OrderedProduct, Order.orderid==OrderedProduct.orderid) \
+        
+        orderDetails = db.session.query(OrderedProduct).with_entities(OrderedProduct.quantity) \
+        .join(Order, Order.orderid==OrderedProduct.orderid) \
         .join(Product, Product.productid==OrderedProduct.productid) \
         .join(Size, Size.productid==OrderedProduct.productid) \
-        .filter(Order.userid == userid) \
+        .add_columns(Product.product_name, Size.size_name, Order.orderid, Product.discounted_price, Order.order_date) \
+        .filter(Order.userid == userid, Size.sizeid == OrderedProduct.sizeid ) \
         .all()
+
+        #orderDetails = OrderedProduct.query.with_entities()
 
         #products = Product.query.all()
         return render_template('userOrders.html', orderDetails=orderDetails)

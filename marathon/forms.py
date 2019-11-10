@@ -300,12 +300,13 @@ def extractOrderdetails(request, totalsum):
 def addOrderedproducts(userId, orderid):
     #with session.no_autoflush:
     cart = Cart.query.with_entities(Cart.productid, Cart.quantity, Cart.sizeid).filter(Cart.userid == userId)
+
     
 
     for item in cart:
-        
+        print(item)
         orderedproduct = OrderedProduct(orderid=orderid, productid=item.productid, sizeid=item.sizeid, quantity=item.quantity)
-        
+        print(orderedproduct)
         db.session.add(orderedproduct)
 
         size_qty = Size.query.filter_by(productid=item.productid, sizeid=item.sizeid).first()

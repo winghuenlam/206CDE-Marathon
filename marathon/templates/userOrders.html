@@ -33,12 +33,12 @@
                           <tbody>
                             {% for i in orderDetails%} 
                               <tr>
-                                <td>{{i[0].orderid}}</td>
-                                <td>{{i[2].product_name}}</td>
-                                <td>{{i[3].size_name}}</td>
-                                <td>{{i[1].quantity}}</td>
-                                <td>{{i[0].total_price}}</td>
-                                <td>{{i[0].order_date}}</td>
+                                <td>{{i.orderid}}</td>
+                                <td>{{i.product_name}}</td>
+                                <td>{{i.size_name}}</td>
+                                <td>{{i.quantity}}</td>
+                                <td>{{i.discounted_price*i.quantity}}</td>
+                                <td>{{i.order_date}}</td>
                               </tr>
                             {% endfor %}
                           </tbody>
