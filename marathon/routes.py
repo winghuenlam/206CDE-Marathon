@@ -157,17 +157,16 @@ def getUserOrders():
         loggedIn, firstName, productCountinKartForGivenUser, userid = getLoginUserDetails()
 
         
-        orderDetails = db.session.query(OrderedProduct).with_entities(OrderedProduct.quantity) \
+        orderDetails = db.session.query(OrderedProduct).with_entities(OrderedProduct.ordproductid, OrderedProduct.quantity) \
         .join(Order, Order.orderid==OrderedProduct.orderid) \
         .join(Product, Product.productid==OrderedProduct.productid) \
         .join(Size, Size.productid==OrderedProduct.productid) \
-        .add_columns(Product.product_name, Size.size_name, Order.orderid, Product.discounted_price, Order.order_date) \
+        .outerjoin(Refund, OrderedProduct.ordproductid == Refund.ordproductid) \
+        .add_columns(Product.product_name, Size.size_name, Order.orderid, Product.discounted_price, Order.order_date, func.sum(Refund.quantity).label("refundQty")) \
         .filter(Order.userid == userid, Size.sizeid == OrderedProduct.sizeid ) \
+        .group_by(OrderedProduct.ordproductid, OrderedProduct.quantity, Product.product_name, Size.size_name, Order.orderid, Product.discounted_price, Order.order_date) \
         .all()
 
-        #orderDetails = OrderedProduct.query.with_entities()
-
-        #products = Product.query.all()
         return render_template('userOrders.html', orderDetails=orderDetails)
     return redirect(url_for('index'))
 
@@ -227,12 +226,6 @@ def delete_category(category_id):
 def getCategories():
     if isUserAdmin():
         isAdmin = True
-        #categories = Category.query.all()
-        #cur = mysql.connection.cursor()
-        #Query for number of products on a category:
-        #cur.execute('SELECT category.categoryid, category.category_name, COUNT(product_category.productid) as noOfProducts FROM category LEFT JOIN product_category ON category.categoryid = product_category.categoryid GROUP BY category.categoryid, category.category_name');
-        #categories = cur.fetchall()
-        #cur.close()
 
         categories = Category.query.with_entities(Category.categoryid, Category.category_name) \
         .outerjoin(ProductCategory, ProductCategory.categoryid == Category.categoryid) \
@@ -578,3 +571,40 @@ def seeTrends():
 def contact():
     isAdmin = isUserAdmin()
     return render_template("contact.html", isAdmin=isAdmin)
+
+
+@app.route("/refund", methods=['GET', 'POST'])
+def refund():
+    if isUserLoggedIn():
+        isAdmin = isUserAdmin()
+        re_ordproductid = request.args.get('ordproductid')
+
+        productDetails = OrderedProduct.query.with_entities(OrderedProduct.orderid, OrderedProduct.ordproductid, OrderedProduct.sizeid) \
+        .join(Product, Product.productid == OrderedProduct.productid) \
+        .join(Size, OrderedProduct.sizeid == Size.sizeid) \
+        .outerjoin(Refund, OrderedProduct.ordproductid == Refund.ordproductid) \
+        .add_columns(Product.product_name, Size.size_name, OrderedProduct.quantity, func.sum(Refund.quantity).label("refundQty")) \
+        .filter(OrderedProduct.ordproductid == re_ordproductid) \
+        .group_by(OrderedProduct.orderid, OrderedProduct.ordproductid, OrderedProduct.sizeid, Product.product_name, Size.size_name, OrderedProduct.quantity) \
+        .first()
+
+        form = refundForm()
+        if form.validate_on_submit():
+            refund_qty = form.quantity.data
+
+            refund = Refund(ordproductid=re_ordproductid, quantity=refund_qty)
+            
+            db.session.add(refund)
+            db.session.flush()
+            db.session.commit()
+            return redirect(url_for('getUserOrders'))
+
+        elif request.method == 'GET':
+            form.orderid.data = productDetails[0]
+            form.productname.data = productDetails[3]
+            form.size.data = productDetails[4]
+
+        return render_template('refund.html', form=form, isAdmin=isAdmin)
+    return redirect(url_for('index'))
+
+

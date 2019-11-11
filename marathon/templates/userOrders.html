@@ -36,9 +36,22 @@
                                 <td>{{i.orderid}}</td>
                                 <td>{{i.product_name}}</td>
                                 <td>{{i.size_name}}</td>
-                                <td>{{i.quantity}}</td>
+                                <td>
+                                  {% if i.refundQty == None %}
+                                    {{i.quantity}}
+                                  {% else %}
+                                    {{i.quantity}} (Refunded {{i.refundQty}})
+                                  {% endif %}
+                                </td>
                                 <td>{{i.discounted_price*i.quantity}}</td>
                                 <td>{{i.order_date}}</td>
+                                <td>
+                                  {% if i.refundQty == None or i.refundQty < i.quantity%}
+                                  <p class="buttons"><a href="{{url_for('refund', ordproductid=i.ordproductid)}}" class="btn btn-outline-secondary">Refund</a></p>
+                                  {% else %}
+                                  <p>Refunded</p>
+                                  {% endif %}
+                                </td>
                               </tr>
                             {% endfor %}
                           </tbody>

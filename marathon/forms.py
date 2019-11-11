@@ -334,6 +334,14 @@ def updateSalestransaction(totalsum, ccnumber, orderid, cctype, full_name, addre
     db.session.commit()
 
 
+class refundForm(FlaskForm):
+    orderid = IntegerField('Order ID:', validators=[DataRequired()])
+    productname = StringField('Product Name:', validators=[DataRequired()])
+    size = StringField('Size:', validators=[DataRequired()])
+    quantity = IntegerField('Quantity:', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
 # sends email for order confirmation
 '''
 def sendEmailconfirmation(email, username, ordernumber, phonenumber):

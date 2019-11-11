@@ -102,7 +102,7 @@ class Order(db.Model):
     orderid = db.Column(db.Integer, primary_key=True)
     order_date = db.Column(db.DateTime, nullable=False)
     total_price = db.Column(db.DECIMAL, nullable=False)
-    userid = db.Column(db.Integer, db.ForeignKey('user.userid'), nullable=False, primary_key=True)
+    userid = db.Column(db.Integer, db.ForeignKey('user.userid'), nullable=False)
 
 
     def __repr__(self):
@@ -119,6 +119,15 @@ class OrderedProduct(db.Model):
     def __repr__(self):
         return f"Order('{self.ordproductid}', '{self.orderid}','{self.productid}', '{self.sizeid},'{self.quantity}')"
 
+class Refund(db.Model):
+    __table_args__ = {'extend_existing': True}
+    refundid = db.Column(db.Integer, primary_key=True)
+    ordproductid = db.Column(db.Integer, db.ForeignKey('ordered_product.ordproductid'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    created_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Refund('{self.ordproductid}', '{self.quantity}')"
 
 
 class SaleTransaction(db.Model):
